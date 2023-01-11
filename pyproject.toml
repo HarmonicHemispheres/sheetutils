@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "sheetutils"
+version = "0.1.0"
+description = "utilities and tools for spreadsheets and table files"
+authors = ["harmonichemispheres <robby.boney@harmonichemispheres.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+typer = "^0.7.0"
+fastapi = "^0.89.1"
+openpyxl = "^3.0.10"
+xlrd3 = "^1.1.0"
+pandas = "^1.5.2"
+loguru = "^0.6.0"
+pydantic = "^1.10.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
