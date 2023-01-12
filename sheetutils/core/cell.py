@@ -3,7 +3,7 @@ from typing import Any
 from pydantic import BaseModel
 
 class Cell(BaseModel):
-    val: Any
+    val: Any = None
     row: int = None
     col: int = None
 

@@ -4,7 +4,7 @@ from openpyxl.utils import get_column_letter
 
 
 # =================== HELPERS =================== #
-def _rc_to_addr(row, column, zero_indexed=True):
+def _rc_to_addr(row, column):
     """ moddified from Michael Currie's answer:
         https://stackoverflow.com/questions/31420817/convert-excel-row-column-indices-to-alphanumeric-cell-reference-in-python-openpy
     """
@@ -13,10 +13,6 @@ def _rc_to_addr(row, column, zero_indexed=True):
 
     if not isinstance(column,int):
         raise Exception("column must be an integer")
-
-    if zero_indexed:
-        row += 1
-        column += 1
 
     return get_column_letter(column) + str(row)
 
@@ -39,7 +35,7 @@ def _addr_to_tuple(addr):
     """ returns the row and column as a tuple of integers from cell address 
     
     example:
-        address="A14" --> (14, 0)
+        address="A14" --> (0, 14)
     """
     col_addr = ""
     row_addr = ""

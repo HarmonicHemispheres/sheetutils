@@ -1,5 +1,6 @@
 
 from sheetutils.core.cell import Cell
+from sheetutils.core.range import Range
 import sheetutils.core.utils.sheetops as shops
 from typing import Union, List, Iterator
 from pathlib import Path
@@ -20,13 +21,18 @@ class Sheet(ABC):
         pass
     
     @abstractmethod
-    def cell(self, address: str) -> Cell:
+    def cell(self, address: str=None, row:int=None, col:int=None) -> Cell:
         pass
     
     @abstractmethod
     def cells(self, address: str) -> Iterator[Cell]:
         pass
+    
+    @abstractmethod
+    def range(self, address: str) -> Range:
+        pass
 
+        
 
 ##########################################
 ### XLSX (SHEET) CLASS
@@ -41,15 +47,37 @@ class Xlsx(Sheet):
     def name(self) -> str:
         return self._name
 
-    def cell(self, address: str) -> Cell:
-        row, col = shops._addr_to_tuple(address)
+    def cell(self, address: str=None, row:int=None, col:int=None) -> Cell:
+        # -- Validation
+        if address:
+            col,row = shops._addr_to_tuple(address)
+        elif not row or not col:
+            raise Exception("if no address is used, row and col must be provided!")
+        
+        # -- get cell
         cell = self._data.cell(row, col)
+
+        # -- return result
         return Cell(val=cell.value, row=row, col=col)
     
     def cells(self) -> Iterator[Cell]:
         for row in self._data:
             for cell in row:
-                yield Cell(val=cell.value, row=cell.row-1, col=cell.column-1)
+                yield Cell(val=cell.value, row=cell.row, col=cell.column)
+    
+    def range(self, address: str) -> Range:
+        rng = Range(address=address)
+        for r,c in rng._iter_cell_rcs():
+            cell = self.cell(row=r, col=c)
+            rng._add_cell_to_cache(cell)
+        
+        return rng
+    
+    def get_after_in_row(self, address:str, key:str):
+        """returns the first non-null value after a key in a row"""
+        pass
+        
+
 
 
 ##########################################
@@ -64,17 +92,28 @@ class Xls(Sheet):
     def name(self) -> str:
         return self._name
         
-    def cell(self, address: str) -> Cell:
-        row, col = shops._addr_to_tuple(address)
+    def cell(self, address: str=None, row:int=None, col:int=None) -> Cell:
+        # -- Validation
+        if address:
+            col,row = shops._addr_to_tuple(address)
+        elif not row or not col:
+            raise Exception("if no address is used, row and col must be provided!")
+        
+        # -- get cell
         value = self._data.cell_value(rowx=row-1, colx=col-1)
+
+        # -- return result
         return Cell(val=value, row=row, col=col)
     
         
     def cells(self) -> Iterator[Cell]:
-        for row_idx in range(0, self._data.nrows):
-            for col_idx in range(0, self._data.ncols):
-                val = self._data.cell_value(row_idx, col_idx) or None
-                yield Cell(val=val, row=row_idx, col=col_idx)
+        for r in range(0, self._data.nrows):
+            for c in range(0, self._data.ncols):                
+                val = self._data.cell_value(r, c) or None
+                yield Cell(val=val, row=r+1, col=c+1)
+    
+    def range(self, address: str) -> Range:
+        pass
 
 
 ##########################################
