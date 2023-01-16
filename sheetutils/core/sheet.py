@@ -17,7 +17,11 @@ from abc import ABC, abstractmethod, abstractproperty
 class Sheet(ABC):
     
     @abstractproperty
-    def name(self, address: str) -> str:
+    def name(self) -> str:
+        pass
+
+    @abstractproperty
+    def workbook(self) -> Path:
         pass
     
     @abstractmethod
@@ -38,14 +42,18 @@ class Sheet(ABC):
 ### XLSX (SHEET) CLASS
 ##########################################
 class Xlsx(Sheet):
-    def __init__(self, data: Worksheet=None):
+    def __init__(self, data: Worksheet=None, workbook: Path = None):
         self._data: Worksheet = data
-
         self._name = self._data.title
+        self._workbook = Path(workbook) if workbook else workbook
 
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def workbook(self) -> Path:
+        return self._workbook
 
     def cell(self, address: str=None, row:int=None, col:int=None) -> Cell:
         # -- Validation
@@ -64,9 +72,25 @@ class Xlsx(Sheet):
         for row in self._data:
             for cell in row:
                 yield Cell(val=cell.value, row=cell.row, col=cell.column)
+
+    def range_all(self) -> Range:
+        rng = Range()
+        rng._sheet = self.name
+        rng._workbook = self.workbook
+        cells = tuple(self.cells())
+        rng._a1_cell = cells[0]
+        rng._a2_cell = cells[-1]
+        for cell in cells:
+            rng._add_cell_to_cache(cell)
+
+        return rng
+
     
     def range(self, address: str) -> Range:
         rng = Range(address=address)
+        rng._sheet = self.name
+        rng._workbook = self.workbook
+
         for r,c in rng._iter_cell_rcs():
             cell = self.cell(row=r, col=c)
             rng._add_cell_to_cache(cell)
@@ -84,13 +108,18 @@ class Xlsx(Sheet):
 ### XLS (SHEET) CLASS
 ##########################################
 class Xls(Sheet):
-    def __init__(self, data: xlrd.sheet.Sheet=None):
+    def __init__(self, data: xlrd.sheet.Sheet=None, workbook: Path = None):
         self._data: xlrd.sheet.Sheet = data
         self._name = self._data.name
+        self._workbook = Path(workbook) if workbook else workbook
 
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def workbook(self) -> Path:
+        return self._workbook
         
     def cell(self, address: str=None, row:int=None, col:int=None) -> Cell:
         # -- Validation
@@ -113,7 +142,11 @@ class Xls(Sheet):
                 yield Cell(val=val, row=r+1, col=c+1)
     
     def range(self, address: str) -> Range:
-        pass
+        rng = Range(address=address)
+        rng._sheet = self.name
+        rng._workbook = self.workbook
+
+        return rng
 
 
 ##########################################

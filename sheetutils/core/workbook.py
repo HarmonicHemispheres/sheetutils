@@ -1,7 +1,7 @@
 
 import sheetutils.core.utils.io as io
 from sheetutils.core.sheet import Sheet, Xlsx, Xls, SheetCollection
-from typing import Union
+from typing import Union, List, Iterator
 from pathlib import Path
 import xlrd3 as xlrd
 import openpyxl
@@ -28,7 +28,20 @@ class Workbook:
         self._raw_xlsx: openpyxl.Workbook = None
         self._raw_xls: xlrd.Book = None
 
+    # ------ PRIVATE METHODS
+    # ------ PROPERTIES METHODS
+    @property
+    def sheets(self) -> Iterator[Sheet]:
+        if self.type == WorkbookType.xlsx:
+            for name in self._raw_xlsx.get_sheet_names():
+                yield self.load_sheet(name)
 
+        elif self.type == WorkbookType.xls:
+            for idx, name in enumerate(self._raw_xls.sheet_names()):
+                yield self.load_sheet(name)
+
+
+    # ------ PUBLIC METHODS
     def load(self):
         if self.file.suffix == ".xlsx":
             self.type = WorkbookType.xlsx
@@ -41,11 +54,17 @@ class Workbook:
 
     def load_sheet(self, name: str) -> Sheet:
         if self.type == WorkbookType.xlsx:
-            return Xlsx(self._raw_xlsx.get_sheet_by_name(name))
+            return Xlsx(
+                self._raw_xlsx.get_sheet_by_name(name),
+                workbook=self.file
+            )
         elif self.type == WorkbookType.xls:
             for idx, sheet_name in enumerate(self._raw_xls.sheet_names()):
                 if sheet_name == name:
-                    return Xls(self._raw_xls.sheet_by_index(idx))
+                    return Xls(
+                        self._raw_xls.sheet_by_index(idx),
+                        workbook=self.file
+                    )
         
 
     def sheet(self, name: str) -> Sheet:
