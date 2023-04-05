@@ -11,7 +11,7 @@
 # Install
 
 ```
-pip install <URL>
+pip install git+https://github.com/HarmonicHemispheres/sheetutils.git
 ```
 
 <br>
